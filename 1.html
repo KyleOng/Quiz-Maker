@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+        integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <script src="https://kit.fontawesome.com/4d41bdac84.js" crossorigin="anonymous"></script>
+
+    <title>Hello, world!</title>
+
+    <style>
+        #questionaire>div {
+            position: relative;
+            padding: 1.5rem 0 1rem 0;
+            border-top: 1px solid Gainsboro;
+        }
+
+        #questionaire>div>span:hover {
+            cursor: pointer;
+            color: DodgerBlue;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        #questionaire>div>textarea {
+            overflow: hidden;
+        }
+
+        #questionaire>div>span,
+        #questionaire>div>textarea {
+            display: block;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        #questionaire>div>button:nth-child(2) {
+            position: absolute;
+            top: 0;
+            right: 60px;
+        }
+
+        #questionaire>div>button:nth-child(3) {
+            position: absolute;
+            top: 0;
+            right: 30px;
+        }
+
+        #questionaire>div>button:nth-child(4) {
+            position: absolute;
+            top: 0;
+            right: 0;
+        }
+
+        #questionaire input[type='radio']+label:hover {
+            cursor: pointer;
+            color: red;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        #questionaire input[type='radio']+textarea {
+            overflow: hidden;
+        }
+
+        #questionaire input[type='radio']+label,
+        #questionaire input[type='radio']+textarea {
+            margin-left: 1rem;
+            max-width: 60%;
+        }
+
+        #questionaire input[type='radio']+label+button {
+            margin-bottom: 0.35rem;
+        }
+
+        #questionaire input[type='radio']+textarea+button {
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+
+<body class="container m-4">
+    <div id="questionaire">
+    </div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+        integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous">
+    </script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
+        integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous">
+    </script>
+
+    <script>
+        // Utilities
+        function uuidv4(end) {
+            var uuid = ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+                (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+            );
+            if (end == undefined) {
+                return uuid
+            } else {
+                return uuid.replace(/-/g, '').substring(0, end);
+            }
+        }
+
+        function plainHTML_to_HTML(str) {
+            var div = document.createElement('div');
+            div.innerHTML = str;
+            return (div.children[0])
+        }
+
+        // Questionaire
+        var questionaire_json = [];
+        var questionaire = document.getElementById("questionaire");
+        var create_button = plainHTML_to_HTML(`
+            <button class="btn btn-sm btn-info my-3">
+                Add more questions
+            </button>
+        `);
+        var save_button = plainHTML_to_HTML(`
+            <button class="btn btn-sm btn-dark m-3">
+                Save
+            </button>
+        `);
+        questionaire.append(create_button, save_button);
+        create_button.addEventListener('click', function () {
+            var question_choices = document.createElement("div");
+            var question = document.createElement("span");
+            var question_id = uuidv4(10);
+            question.innerHTML = "Click here to edit Question.";
+            question.setAttribute("id", question_id);
+            question.setAttribute("onclick", "question_onclick(this)");
+
+            var question_moveup_button = plainHTML_to_HTML(`
+            <button class="btn btn-link text-success mx-1 p-0">
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            `);
+            question_moveup_button.setAttribute("onclick", "question_moveup(this)");
+
+            var question_movedown_button = plainHTML_to_HTML(`
+            <button class="btn btn-link text-primary mx-1 p-0">
+                <i class="fas fa-arrow-down"></i>
+            </button>
+            `);
+            question_movedown_button.setAttribute("onclick", "question_movedown(this)");
+
+            var question_delete_button = plainHTML_to_HTML(`
+            <button class="btn btn-link text-danger mx-1 p-0">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+            `);
+            question_delete_button.setAttribute("onclick", "question_delete(this)");
+
+            var choices = create_choice(question_id);
+
+            var choice_add_button = plainHTML_to_HTML(`
+            <button class="btn btn-sm btn-outline-dark"> Add more choices
+            </button>
+            `);
+            choice_add_button.setAttribute("onclick", "choice_add(this)");
+
+            question_choices.append(question, question_moveup_button, question_movedown_button,
+                question_delete_button, choices[0], choice_add_button);
+            questionaire.insertBefore(question_choices, this);
+
+            // Append questiona and choices into json
+            question_choices_json = {};
+            question_choices_json = {
+                'id': question_id,
+                'question': question.innerHTML,
+                'choices': {},
+            };
+            question_choices_json['choices'][choices[1]] = choices[2]
+            questionaire_json.push(question_choices_json);
+
+        });
+
+        function auto_grow(element) {
+            element.style.height = "auto";
+            element.style.height = (element.scrollHeight) + "px";
+            if (parseInt(element.style.width) - 2 == element.clientWidth) {
+                element.style.width = "auto";
+                element.style.width = (element.scrollWidth) + "px";
+            } else {
+                element.setAttribute("wrap", "on");
+            }
+        }
+
+        function question_onclick(element) {
+            var question = element;
+            var question_content = question.innerHTML;
+            var question_editable = document.createElement("textarea");
+            question_editable.value = question_content;
+
+            var question_choices = question.parentElement;
+            question_choices.insertBefore(question_editable, question);
+
+            question.remove();
+
+            question_editable.focus();
+            question_editable.setAttribute("id", question.id);
+            question_editable.setAttribute("onblur", "question_onblur(this)");
+            question_editable.setAttribute("oninput", "auto_grow(this)");
+            question_editable.style.height = "auto";
+            question_editable.style.height = (question_editable.scrollHeight) + "px";
+        }
+
+        function question_onblur(element) {
+            var question = element;
+            var question_content = question.value;
+            var question_readonly = document.createElement("span");
+            question_readonly.innerHTML = question_content;
+
+            var question_choices = question.parentElement;
+
+            question_choices.insertBefore(question_readonly, question);
+            question.remove();
+
+            question_readonly.setAttribute("id", question.id);
+            question_readonly.setAttribute("onclick", "question_onclick(this)");
+
+            questionaire_json[get_json_question_index(question.id)]['question'] = question_content;
+        }
+
+        function choice_label_onclick(element) {
+            var choice_label = element;
+            var choice_label_content = choice_label.innerHTML;
+            var choice_label_editable = document.createElement("textarea");
+            choice_label_editable.value = choice_label_content;
+
+            var choice = choice_label.parentElement;
+
+            choice.insertBefore(choice_label_editable, choice_label);
+            choice_label.remove();
+
+            choice_label_editable.focus();
+            choice_label_editable.setAttribute("wrap", "off");
+            choice_label_editable.setAttribute("onblur", "choice_label_onblur(this)");
+            choice_label_editable.setAttribute("oninput", "auto_grow(this)");
+
+            // Copy from auto_grow to initialize width and height onclick
+            choice_label_editable.style.width = "auto";
+            choice_label_editable.style.width = (choice_label_editable.scrollWidth) + "px";
+            if (parseInt(choice_label_editable.style.width) - 2 > choice_label_editable.clientWidth) {
+                choice_label_editable.setAttribute("wrap", "on");
+            }
+            choice_label_editable.style.height = "auto";
+            choice_label_editable.style.height = (choice_label_editable.scrollHeight) + "px";
+
+        }
+
+        function choice_label_onblur(element) {
+            var choice_label = element;
+            var choice_label_content = choice_label.value;
+            var choice_label_readonly = document.createElement("label");
+            choice_label_readonly.innerHTML = choice_label_content;
+
+            var choice = choice_label.parentElement;
+
+            choice.insertBefore(choice_label_readonly, choice_label);
+            choice_label.remove();
+
+            choice_label_readonly.setAttribute("onclick", "choice_label_onclick(this)");
+
+            var choice_id = choice.children[0].value;
+            var question_id = choice.children[0].name;
+            questionaire_json[get_json_question_index(question_id)]['choices'][choice_id] = choice_label_content;
+        }
+
+        function create_choice(question_id) {
+            var choice = document.createElement("div");
+            var choice_input = document.createElement("input");
+            choice_input.setAttribute("type", "radio");
+            choice_input.setAttribute("name", question_id);
+            choice_input.setAttribute("onclick", "choice_onclick(this)");
+            choice_input.value = uuidv4(5);
+            //choice_input.checked = true;
+
+            var choice_label = document.createElement("label");
+            choice_label.innerHTML = `Click here to edit Choice/Answer.`;
+            choice_label.setAttribute("onclick", "choice_label_onclick(this)");
+
+            var choice_delete_button = plainHTML_to_HTML(`
+            <button class="btn btn-link btn-sm text-danger mx-1 p-0">
+                <i class="fas fa-times"></i>
+            </button>
+            `);
+            choice_delete_button.setAttribute("onclick", "choice_delete(this)");
+
+
+            choice.append(choice_input, choice_label, choice_delete_button);
+            return [choice, choice_input.value, choice_label.innerHTML];
+        }
+
+        function get_json_question_index(question_id) {
+            for (var i = 0; i < questionaire_json.length; i++) {
+                if (questionaire_json[i]["id"] == question_id) {
+                    return i
+                }
+            }
+            return -1;
+        }
+
+        function choice_add(element) {
+            var choice_add_button = element;
+            var choice = choice_add_button.previousSibling;
+            var question_choices = choice.parentElement;
+            var choice_input = choice.children[0]
+            var question_id = choice_input.name;
+            var new_choices = create_choice(question_id);
+
+            questionaire_json[get_json_question_index(question_id)]['choices'][new_choices[1]] = new_choices[2]
+            // Insert new choice element before the choice create button.
+            question_choices.insertBefore(new_choices[0], choice_add_button);
+        }
+
+        function swap_innerHTMLs(source_element, target_element) {
+            temp_element_innerHTML = source_element.innerHTML;
+            source_element.innerHTML = target_element.innerHTML;
+            target_element.innerHTML = temp_element_innerHTML;
+        }
+
+        function swap_json_questions(source_index, target_index) {
+            temp_question_choices_json = questionaire_json[source_index];
+            questionaire_json[source_index] = questionaire_json[target_index];
+            questionaire_json[target_index] = temp_question_choices_json;
+        }
+
+        function question_moveup(element) {
+            var question_moveup_button = element;
+            var current_question_choices = question_moveup_button.parentElement;
+            var current_question_id = current_question_choices.children[0].id;
+            var current_question_index = get_json_question_index(current_question_id);
+            var current_answer = questionaire_json[current_question_index]['answer'];
+
+            if (current_question_index > 0) {
+                var prev_question_choices = current_question_choices.previousSibling;
+                var prev_answer = questionaire_json[current_question_index - 1]['answer'];
+                swap_innerHTMLs(current_question_choices, prev_question_choices);
+                swap_json_questions(current_question_index, current_question_index - 1);
+                if (current_answer != undefined) {
+                    document.querySelector(`input[value="${current_answer}"]`).checked = true;
+                }
+                if (prev_answer != undefined) {
+                    document.querySelector(`input[value="${prev_answer}"]`).checked = true;
+                }
+            }
+        }
+
+        function question_movedown(element) {
+            var question_moveup_button = element;
+            var current_question_choices = question_moveup_button.parentElement;
+            var current_question_id = current_question_choices.children[0].id;
+            var current_question_index = get_json_question_index(current_question_id);
+            var current_answer = questionaire_json[current_question_index]['answer'];
+
+            if (current_question_index < questionaire_json.length - 1) {
+                var next_question_choices = current_question_choices.nextSibling;
+                var next_answer = questionaire_json[current_question_index + 1]['answer'];
+                swap_innerHTMLs(current_question_choices, next_question_choices);
+                swap_json_questions(current_question_index, current_question_index + 1);
+                if (current_answer != undefined) {
+                    document.querySelector(`input[value="${current_answer}"]`).checked = true;
+                }
+                if (next_answer != undefined) {
+                    document.querySelector(`input[value="${next_answer}"]`).checked = true;
+                }
+            }
+        }
+
+        function question_delete(element) {
+            var question_delete_button = element;
+            var current_question_choices = question_delete_button.parentElement;
+            var current_question_id = current_question_choices.children[0].id;
+            var current_question_index = get_json_question_index(current_question_id);
+            current_question_choices.remove();
+            questionaire_json.splice(current_question_index, 1);
+        }
+
+        function choice_onclick(element) {
+            var choice = element;
+            var choice_id = choice.value;
+            var question_id = choice.name;
+            questionaire_json[get_json_question_index(question_id)]['answer'] = choice_id;
+        }
+
+        function choice_delete(element) {
+            var choice_delete_button = element;
+            var current_choice = choice_delete_button.parentElement;
+            var current_question_id = current_choice.children[0].name;
+            var current_choice_id = current_choice.children[0].value;
+
+            var choice_json = questionaire_json[get_json_question_index(current_question_id)]['choices'];
+            if (Object.keys(choice_json).length > 1) {
+                current_choice.remove();
+                delete choice_json[current_choice_id];
+            } else {
+                alert("Question must have at least one choice.");
+            }
+        }
+
+        questionaire.addEventListener("DOMNodeInserted", function (e) {}, false);
+    </script>
+</body>
+
+</html>
