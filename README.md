@@ -1,3 +1,3 @@
 # Quiz-Maker
 
-Quiz maker using vanilla javascript.
+Quiz maker using vanilla javascript
